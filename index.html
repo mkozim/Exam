@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Остеология — экзамен</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+}
+
+h2 {
+    margin-bottom: 10px;
+}
+
+.container {
+    display: flex;
+    gap: 30px;
+}
+
+.image-area {
+    position: relative;
+}
+
+.image-area img {
+    width: 500px;
+}
+
+.drop-zone {
+    position: absolute;
+    width: 160px;
+    height: 34px;
+    border: 2px dashed #666;
+    background: rgba(255,255,255,0.85);
+    font-size: 12px;
+    text-align: center;
+    line-height: 30px;
+    padding: 2px;
+}
+
+.z1 { top: 20px; left: 180px; }
+.z2 { top: 160px; left: 300px; }
+.z3 { top: 140px; left: 40px; }
+.z4 { top: 180px; left: 40px; }
+.z5 { top: 260px; left: 220px; }
+.z6 { top: 240px; left: 380px; }
+.z7 { top: 260px; left: 20px; }
+.z8 { top: 300px; left: 380px; }
+
+.answers {
+    width: 320px;
+}
+
+.answer {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+    border: 1px solid #bbb;
+    cursor: grab;
+}
+
+.answer.used {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+.correct {
+    background: #c8f7c5 !important;
+    border-color: #27ae60 !important;
+}
+
+.wrong {
+    background: #f7c5c5 !important;
+    border-color: #c0392b !important;
+}
+
+.result {
+    margin-top: 15px;
+    font-weight: bold;
+}
+
+button {
+    padding: 10px 16px;
+    margin-right: 10px;
+    margin-top: 10px;
+}
+</style>
+</head>
+<body>
+
+<h2>Экзамен: части позвонка (osteologia)</h2>
+<p>Перетащите латинские термины к соответствующим структурам</p>
+
+<div class="container">
+
+    <div class="image-area">
+        <img src="vertebra.png">
+
+        <div class="drop-zone z1" data-answer="processus spinosus"></div>
+        <div class="drop-zone z2" data-answer="foramen vertebrale"></div>
+        <div class="drop-zone z3" data-answer="processus articularis inferior"></div>
+        <div class="drop-zone z4" data-answer="processus articularis superior"></div>
+        <div class="drop-zone z5" data-answer="corpus vertebrae"></div>
+        <div class="drop-zone z6" data-answer="processus transversus"></div>
+        <div class="drop-zone z7" data-answer="foramen transversarium"></div>
+        <div class="drop-zone z8" data-answer="processus costarium"></div>
+    </div>
+
+    <div class="answers" id="answers">
+        <div class="answer" draggable="true">processus spinosus</div>
+        <div class="answer" draggable="true">foramen vertebrale</div>
+        <div class="answer" draggable="true">processus articularis inferior</div>
+        <div class="answer" draggable="true">processus articularis superior</div>
+        <div class="answer" draggable="true">corpus vertebrae</div>
+        <div class="answer" draggable="true">processus transversus</div>
+        <div class="answer" draggable="true">foramen transversarium</div>
+        <div class="answer" draggable="true">processus costarium</div>
+
+        <button id="checkBtn" disabled onclick="check()">Проверить</button>
+        <button onclick="resetAll()">Сбросить</button>
+
+        <div class="result" id="result"></div>
+    </div>
+
+</div>
+
+<script>
+let dragged = null;
+let locked = false;
+
+document.querySelectorAll('.answer').forEach(a => {
+    a.addEventListener('dragstart', () => {
+        if (locked) return;
+        dragged = a;
+    });
+});
+
+document.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+
+    zone.addEventListener('drop', () => {
+        if (locked || !dragged) return;
+
+        // освобождаем предыдущую зону
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            if (z.dataset.user === dragged.textContent) {
+                z.textContent = '';
+                z.dataset.user = '';
+            }
+        });
+
+        zone.textContent = dragged.textContent;
+        zone.dataset.user = dragged.textContent;
+        dragged.classList.add('used');
+
+        updateCheckButton();
+    });
+});
+
+function updateCheckButton() {
+    const allFilled = [...document.querySelectorAll('.drop-zone')]
+        .every(z => z.dataset.user);
+    document.getElementById('checkBtn').disabled = !allFilled;
+}
+
+function check() {
+    locked = true;
+    let correct = 0;
+    let total = document.querySelectorAll('.drop-zone').length;
+
+    document.querySelectorAll('.drop-zone').forEach(z => {
+        z.classList.remove('correct', 'wrong');
+        if (z.dataset.user === z.dataset.answer) {
+            z.classList.add('correct');
+            correct++;
+        } else {
+            z.classList.add('wrong');
+            z.textContent = `❌ ${z.dataset.user} | ✔ ${z.dataset.answer}`;
+        }
+    });
+
+    let percent = Math.round((correct / total) * 100);
+    document.getElementById('result').textContent =
+        `Результат: ${correct}/${total} (${percent}%)`;
+}
+
+function resetAll() {
+    locked = false;
+    document.getElementById('result').textContent = '';
+    document.getElementById('checkBtn').disabled = true;
+
+    document.querySelectorAll('.drop-zone').forEach(z => {
+        z.textContent = '';
+        z.dataset.user = '';
+        z.classList.remove('correct', 'wrong');
+    });
+
+    document.querySelectorAll('.answer').forEach(a => {
+        a.classList.remove('used');
+    });
+}
+</script>
+
+</body>
+  </html>
