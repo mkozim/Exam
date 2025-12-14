@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Анатомия — тест</title>
+<script src="data/tests.js"></script>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    padding: 20px;
+}
+
+.layout {
+    display: flex;
+    gap: 40px;
+    position: relative;
+}
+
+.image-box img {
+    width: 500px;
+    border: 1px solid #ccc;
+}
+
+.zones {
+    min-width: 360px;
+}
+
+.drop {
+    border: 2px dashed #555;
+    padding: 6px;
+    margin-bottom: 12px;
+    min-height: 28px;
+    background: #fff;
+}
+
+.answer {
+    border: 1px solid #aaa;
+    padding: 6px;
+    margin: 4px 0;
+    cursor: grab;
+    background: #f8f8f8;
+}
+
+.correct { background: #c8f7c5; }
+.wrong   { background: #f7c5c5; }
+
+.buttons { margin-top: 15px; }
+.result  { margin-top: 10px; font-weight: bold; }
+
+/* SVG слой */
+#svgLayer {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+}
+</style>
+</head>
+<body>
+
+<h2 id="title"></h2>
+
+<div class="layout" id="layout">
+    <div class="image-box">
+        <img id="img">
+    </div>
+    <div class="zones" id="drops"></div>
+</div>
+
+<h3>Ответы</h3>
+<div id="answers"></div>
+
+<div class="buttons">
+    <button onclick="check()">Проверить</button>
+    <button onclick="resetAll()">Сбросить</button>
+</div>
+
+<div class="result" id="res"></div>
+
+<svg id="svgLayer"></svg>
+
+<script>
+const id = new URLSearchParams(location.search).get('id');
+const t = tests[id];
+
+title.textContent = t.title;
+img.src = t.image;
+
+let dragged = null;
+const drops = [];
+const svg = document.getElementById('svgLayer');
+
+/* ===== CREATE ZONES ===== */
+t.items.forEach(i => {
+    const d = document.createElement('div');
+    d.className = 'drop';
+    d.dataset.answer = i.answer;
+
+    d.ondragover = e => e.preventDefault();
+    d.ondrop = () => {
+        d.textContent = dragged.dataset.value;
+        d.dataset.user = dragged.dataset.value;
+        drawArrows();
+    };
+
+    document.getElementById('drops').appendChild(d);
+    drops.push(d);
+});
+
+/* ===== ANSWERS ===== */
+t.items.forEach(i => {
+    const a = document.createElement('div');
+    a.className = 'answer';
+    a.textContent = i.n + '. ' + i.answer;
+    a.draggable = true;
+    a.dataset.value = i.answer;
+    a.ondragstart = () => dragged = a;
+    document.getElementById('answers').appendChild(a);
+});
+
+/* ===== SVG ARROWS ===== */
+function drawArrows(colors = []) {
+    svg.innerHTML = "";
+
+    const layoutRect = document.getElementById('layout').getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    svg.setAttribute("width", layoutRect.width);
+    svg.setAttribute("height", layoutRect.height);
+
+    drops.forEach((d, i) => {
+        const r = d.getBoundingClientRect();
+
+        const x1 = r.left - layoutRect.left;
+        const y1 = r.top + r.height / 2 - layoutRect.top;
+
+        const x2 = imgRect.right - layoutRect.left;
+        const y2 = imgRect.top + ((i + 1) / (drops.length + 1)) * imgRect.height - layoutRect.top;
+
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x1);
+        line.setAttribute("y1", y1);
+        line.setAttribute("x2", x2);
+        line.setAttribute("y2", y2);
+        line.setAttribute("stroke", colors[i] || "#000");
+        line.setAttribute("stroke-width", "2");
+        line.setAttribute("marker-end", "url(#arrow)");
+
+        svg.appendChild(line);
+    });
+}
+
+/* arrow marker */
+svg.innerHTML = `
+<defs>
+  <marker id="arrow" markerWidth="10" markerHeight="10" refX="10" refY="3" orient="auto">
+    <path d="M0,0 L10,3 L0,6 Z" fill="black"/>
+  </marker>
+</defs>`;
+
+/* ===== CHECK ===== */
+function check() {
+    let ok = 0;
+    const colors = [];
+
+    drops.forEach(d => {
+        d.classList.remove('correct','wrong');
+        if (d.dataset.user === d.dataset.answer) {
+            d.classList.add('correct');
+            colors.push("green");
+            ok++;
+        } else {
+            d.classList.add('wrong');
+            colors.push("red");
+        }
+    });
+
+    drawArrows(colors);
+    res.textContent = `Правильно: ${ok} / ${t.items.length}`;
+}
+
+/* ===== RESET ===== */
+function resetAll() {
+    location.reload();
+}
+
+window.addEventListener('resize', drawArrows);
+img.onload = drawArrows;
+</script>
+
+</body>
+</html>
