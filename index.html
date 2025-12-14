@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<title>Остеология — экзамен</title>
+
+<style>
+body {
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
+    padding: 20px;
+}
+
+h2 {
+    margin-bottom: 5px;
+}
+
+.container {
+    display: flex;
+    gap: 30px;
+}
+
+/* ================= IMAGE ================= */
+
+.image-area {
+    position: relative;
+}
+
+.image-area img {
+    width: 500px;
+}
+
+/* ================= DROP ZONES ================= */
+
+.drop-zone {
+    position: absolute;
+    width: 190px;
+    min-height: 34px;
+    padding-left: 25px;
+    border: 2px dashed #666;
+    background: rgba(255,255,255,0.95);
+    font-size: 12px;
+}
+
+.drop-zone .text {
+    line-height: 30px;
+}
+
+/* стрелка */
+.arrow {
+    position: absolute;
+    left: -32px;
+    top: 50%;
+    width: 32px;
+    height: 2px;
+    background: #000;
+}
+
+.arrow::after {
+    content: "";
+    position: absolute;
+    right: -6px;
+    top: -4px;
+    border-left: 8px solid #000;
+    border-top: 5px solid transparent;
+    border-bottom: 5px solid transparent;
+}
+
+/* позиции зон */
+.z1 { top: 20px; left: 170px; }
+.z2 { top: 160px; left: 320px; }
+.z3 { top: 140px; left: 20px; }
+.z4 { top: 180px; left: 20px; }
+.z5 { top: 260px; left: 230px; }
+.z6 { top: 240px; left: 390px; }
+.z7 { top: 260px; left: 10px; }
+.z8 { top: 300px; left: 390px; }
+
+/* ================= ANSWERS ================= */
+
+.answers {
+    width: 340px;
+}
+
+.answer {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: #fff;
+    border: 1px solid #bbb;
+    cursor: grab;
+}
+
+.answer.used {
+    opacity: 0.4;
+    pointer-events: none;
+}
+
+/* ================= RESULT ================= */
+
+.correct {
+    background: #c8f7c5 !important;
+    border-color: #27ae60 !important;
+}
+
+.wrong {
+    background: #f7c5c5 !important;
+    border-color: #c0392b !important;
+}
+
+button {
+    padding: 10px 16px;
+    margin-top: 10px;
+    margin-right: 10px;
+}
+
+.result {
+    margin-top: 15px;
+    font-weight: bold;
+}
+</style>
+</head>
+<body>
+
+<h2>Экзамен — части позвонка (osteologia)</h2>
+<p>Перетащите пронумерованные латинские термины к соответствующим структурам</p>
+
+<div class="container">
+
+<!-- ================= IMAGE ================= -->
+<div class="image-area">
+    <img src="vertebra.png">
+
+    <div class="drop-zone z1" data-answer="processus spinosus">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z2" data-answer="foramen vertebrale">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z3" data-answer="processus articularis inferior">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z4" data-answer="processus articularis superior">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z5" data-answer="corpus vertebrae">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z6" data-answer="processus transversus">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z7" data-answer="foramen transversarium">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+    <div class="drop-zone z8" data-answer="processus costarium">
+        <div class="arrow"></div><div class="text"></div>
+    </div>
+</div>
+
+<!-- ================= ANSWERS ================= -->
+<div class="answers">
+
+    <div class="answer" draggable="true" data-value="processus spinosus">
+        1. processus spinosus
+    </div>
+    <div class="answer" draggable="true" data-value="foramen vertebrale">
+        2. foramen vertebrale
+    </div>
+    <div class="answer" draggable="true" data-value="processus articularis inferior">
+        3. processus articularis inferior
+    </div>
+    <div class="answer" draggable="true" data-value="processus articularis superior">
+        4. processus articularis superior
+    </div>
+    <div class="answer" draggable="true" data-value="corpus vertebrae">
+        5. corpus vertebrae
+    </div>
+    <div class="answer" draggable="true" data-value="processus transversus">
+        6. processus transversus
+    </div>
+    <div class="answer" draggable="true" data-value="foramen transversarium">
+        7. foramen transversarium
+    </div>
+    <div class="answer" draggable="true" data-value="processus costarium">
+        8. processus costarium
+    </div>
+
+    <button onclick="check()">Проверить</button>
+    <button onclick="resetAll()">Сбросить</button>
+
+    <div class="result" id="result"></div>
+</div>
+
+</div>
+
+<script>
+let dragged = null;
+
+document.querySelectorAll('.answer').forEach(a => {
+    a.addEventListener('dragstart', () => dragged = a);
+});
+
+document.querySelectorAll('.drop-zone').forEach(zone => {
+    zone.addEventListener('dragover', e => e.preventDefault());
+
+    zone.addEventListener('drop', () => {
+        const value = dragged.dataset.value;
+
+        // освободить старую зону
+        document.querySelectorAll('.drop-zone').forEach(z => {
+            if (z.dataset.user === value) {
+                z.dataset.user = '';
+                z.querySelector('.text').textContent = '';
+            }
+        });
+
+        zone.dataset.user = value;
+        zone.querySelector('.text').textContent = value;
+
+        dragged.classList.add('used');
+    });
+});
+
+function check() {
+    let correct = 0;
+    document.querySelectorAll('.drop-zone').forEach(zone => {
+        zone.classList.remove('correct', 'wrong');
+        if (zone.dataset.user === zone.dataset.answer) {
+            zone.classList.add('correct');
+            correct++;
+        } else {
+            zone.classList.add('wrong');
+        }
+    });
+    document.getElementById('result').textContent =
+        `Правильно: ${correct} / 8`;
+}
+
+function resetAll() {
+    document.querySelectorAll('.drop-zone').forEach(z => {
+        z.dataset.user = '';
+        z.querySelector('.text').textContent = '';
+        z.classList.remove('correct', 'wrong');
+    });
+    document.querySelectorAll('.answer').forEach(a => a.classList.remove('used'));
+    document.getElementById('result').textContent = '';
+}
+</script>
+
+</body>
+</html>
